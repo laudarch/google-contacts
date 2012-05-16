@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Google-contacts : Appengine Application to keep contacts up to date " />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Google-contacts</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/2xyo/google-contacts">View on GitHub</a>
+
+          <h1 id="project_title">Google-contacts</h1>
+          <h2 id="project_tagline">Appengine Application to keep contacts up to date </h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/2xyo/google-contacts/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/2xyo/google-contacts/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>google-contacts</h1>
+
+<p>Appengine Application to keep contacts up to date </p>
+
+<h1>Installation</h1>
+
+<p>Rename <code>config_exemple.py</code> to <code>config.py</code> with your credentials retrieved from <a href="https://code.google.com/apis/console/">Google API Console</a>.</p>
+
+<p>Rename <code>app_exemple.yaml</code> to <code>app.yaml</code> with your application name.</p>
+
+<h2>Dev Server</h2>
+
+<pre><code>$ python2.5 $PATH/google_appengine/dev_appserver.py $PATH/google-contacts/ --backends --clear_datastore --high_replication
+</code></pre>
+
+<h2>Upload to AppEngine</h2>
+
+<pre><code>$ python2.5 $PATH/google_appengine/appcfg.py update $PATH/google-contacts/
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Google-contacts maintained by <a href="https://github.com/2xyo">2xyo</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
