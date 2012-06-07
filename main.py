@@ -243,7 +243,7 @@ class ModifyMe(webapp.RequestHandler):
         self.response.out.write("<b>%s</b>" % host)
         ####
         try:
-            contact = gd_client.GetContact('test')
+            contact = gd_client.GetContact('http://www.google.com/m8/feeds/contacts/yohann%40lepage.info/base/2e091c5e8b3d60b4')
             
             #for o in m.owner:
             #self.response.out.write("<ul>")
