@@ -143,11 +143,11 @@ class Group(webapp.RequestHandler):
 
     def PrintContacts(self, gd_client, group):
 
-        #query_contacts = gdata.contacts.client.ContactsQuery()
-        #feed = gd_client.GetContacts()
-        #query_contacts.max_results = 9999
-        #query_contacts.group = group
-        #feed = gd_client.GetContacts(q = query_contacts)
+        query_contacts = gdata.contacts.client.ContactsQuery()
+        feed = gd_client.GetContacts()
+        query_contacts.max_results = 9999
+        query_contacts.group = group
+        feed = gd_client.GetContacts(q = query_contacts)
 
         feed_groups = gd_client.GetGroup(group)
 
