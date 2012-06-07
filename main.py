@@ -19,6 +19,7 @@ from urlparse import urlparse
 ereporter.register_logger()
 
 import gdata.contacts.client
+# https://developers.google.com/google-apps/contacts/v3/#contact_entry
 
 from config import *
 
@@ -230,25 +231,15 @@ class ModifyMe(webapp.RequestHandler):
         except:
             stacktrace = traceback.format_exc()
             logging.error("%s", stacktrace) 
-        
-        try:
-            self.response.out.write("> %s <" % m.id)
-        except:
-            stacktrace = traceback.format_exc()
-            logging.error("%s", stacktrace) 
          
         
-        url = urlparse(m.id)
-        host = "%s%s" % (url.netloc, url.path)
-        self.response.out.write("<b>%s</b>" % host)
         ####
         try:
-            contact = gd_client.GetContact('http://www.google.com/m8/feeds/contacts/yohann%40lepage.info/base/2e091c5e8b3d60b4')
-            
-            #for o in m.owner:
-            #self.response.out.write("<ul>")
-            #self.response.out.write("<li>%s</li>" % m.owner)
-            #self.response.out.write("<li>%s</li>" % m.firstname)
+            contact = gd_client.GetContact(str(m.id).replace("http","https"))
+            for o in m.owner:
+                self.response.out.write("<ul>")
+                self.response.out.write("<li>%s</li>" % m.owner)
+                self.response.out.write("<li>%s</li>" % m.firstname)
         except:
             stacktrace = traceback.format_exc()
             logging.error("%s", stacktrace)
@@ -257,7 +248,6 @@ class ModifyMe(webapp.RequestHandler):
         try:    
             if contact.content:
                 self.response.out.write("<li>%s</li>", contact.content.text)
-            # Display the primary email address for the contact.
         except:
             stacktrace = traceback.format_exc()
             logging.error("%s", stacktrace) 
@@ -265,7 +255,7 @@ class ModifyMe(webapp.RequestHandler):
         try:    
             for email in contact.email:
                 if email.primary and email.primary == 'true':
-                    self.response.out.write("<li>mail : %s</li>", email.address)
+                    self.response.out.write("<li>mail : %s</li>" % email.address)
                     
             self.response.out.write("</ul>")
         
