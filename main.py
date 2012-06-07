@@ -9,8 +9,14 @@ import gdata.gauth
 import base64
 import gdata.service
 import atom.http_core
+import traceback
+import logging
 from google.appengine.ext import db
 from google.appengine.api import users
+from google.appengine.ext import ereporter
+from urlparse import urlparse
+
+ereporter.register_logger()
 
 import gdata.contacts.client
 
@@ -137,11 +143,11 @@ class Group(webapp.RequestHandler):
 
     def PrintContacts(self, gd_client, group):
 
-        query_contacts = gdata.contacts.client.ContactsQuery()
-        feed = gd_client.GetContacts()
-        query_contacts.max_results = 9999
-        query_contacts.group = group
-        feed = gd_client.GetContacts(q = query_contacts)
+        #query_contacts = gdata.contacts.client.ContactsQuery()
+        #feed = gd_client.GetContacts()
+        #query_contacts.max_results = 9999
+        #query_contacts.group = group
+        #feed = gd_client.GetContacts(q = query_contacts)
 
         feed_groups = gd_client.GetGroup(group)
 
@@ -149,18 +155,52 @@ class Group(webapp.RequestHandler):
 
         self.response.out.write("<ul>")
         for entry in feed.entry:
-            m = MyContact(users.get_current_user(), entry.id.text, entry.name.full_name.text)
-            m.put()
-            self.response.out.write("""<li><a href=\"\ModifyMe?hash=%s">%s</a> : """
+            
+            #Check if already exist
+            q = db.GqlQuery("select * from MyContact where id = :1", entry.id.text).get()
+            
+            #for e in q:
+            #    debug = db.to_dict(e)
+            #    logging.info("DEBUG: ====>" + str(debug))
+            #    self.response.out.write("\n" + str(debug))
+                
+           
+               
+            if not q:
+                try:
+                    m = MyContact(users.get_current_user(), entry.id.text, entry.name.full_name.text)
+                    m.put()
+                except:
+                    stacktrace = traceback.format_exc()
+                    logging.error("%s", stacktrace)
+                    
+            m = db.GqlQuery("select * from MyContact where id = :1", entry.id.text).get()
+            
+            
+            #for key in m:
+            #    self.response.out.write("\n%s : %s" % (key, m[key]))
+                
+            #try:
+            #    contact_key = db.Key.from_path('MyContact',users.get_current_user(), entry.id.text)
+            #    m = MyContact.get(contact_key)
+            #except:
+            #    stacktrace = traceback.format_exc()
+            #    logging.error("%s", stacktrace)  
+                    
+            
+            
+                
+            if m.key():    
+                self.response.out.write("""<li><a href=\"\ModifyMe?hash=%s">%s</a> : """
                                     % (m.key(),
                                        entry.name.full_name))
-
-            for email in entry.email:
-                if email.primary == 'true':
-                    self.response.out.write(" <b>%s</b>" % email.address.encode('utf-8'))
-                else:
-                    self.response.out.write(" %s" % email.address.encode('utf-8'))
-            self.response.out.write("</li>")
+            
+            #for email in entry.email:
+            #    if email.primary == 'true':
+            #        self.response.out.write(" <b>%s</b>" % email.address.encode('utf-8'))
+            #    else:
+            #        self.response.out.write(" %s" % email.address.encode('utf-8'))
+            #self.response.out.write("</li>")
 
 
 
@@ -171,37 +211,89 @@ class Group(webapp.RequestHandler):
 
 class ModifyMe(webapp.RequestHandler):
 
-
+    @login_required
     def get(self):
         """print contacts"""
+        current_user = users.get_current_user()
+        access_token_key = 'access_token_%s' % current_user.user_id()
+        token = gdata.gauth.ae_load(access_token_key)
+        gcontacts_client = gdata.contacts.client.ContactsClient(source = SETTINGS['APP_NAME'])
+        gcontacts_client = token.authorize(gcontacts_client)
 
-        self.PrintContact(self.request.get("hash"))
+        self.PrintContact(gcontacts_client,str(self.request.get("hash")))
 
-    def PrintContact(self, key):
+    def PrintContact(self, gd_client, key):
 
-        self.response.out.write("<ul>")
-        m = MyContact.get(key)
-        self.response.out.write("<li>%s</li>" % m.owner)
-        self.response.out.write("<li>%s</li>" % m.firstname)
+        
+        try:
+            m = MyContact.get(key)
+        except:
+            stacktrace = traceback.format_exc()
+            logging.error("%s", stacktrace) 
+        
+        try:
+            self.response.out.write("> %s <" % m.id)
+        except:
+            stacktrace = traceback.format_exc()
+            logging.error("%s", stacktrace) 
+         
+        
+        url = urlparse(m.id)
+        host = "%s%s" % (url.netloc, url.path)
+        self.response.out.write("<b>%s</b>" % host)
+        ####
+        try:
+            contact = gd_client.GetContact('test')
+            
+            #for o in m.owner:
+            #self.response.out.write("<ul>")
+            #self.response.out.write("<li>%s</li>" % m.owner)
+            #self.response.out.write("<li>%s</li>" % m.firstname)
+        except:
+            stacktrace = traceback.format_exc()
+            logging.error("%s", stacktrace)
+          
+            
+        try:    
+            if contact.content:
+                self.response.out.write("<li>%s</li>", contact.content.text)
+            # Display the primary email address for the contact.
+        except:
+            stacktrace = traceback.format_exc()
+            logging.error("%s", stacktrace) 
+         
+        try:    
+            for email in contact.email:
+                if email.primary and email.primary == 'true':
+                    self.response.out.write("<li>mail : %s</li>", email.address)
+                    
+            self.response.out.write("</ul>")
+        
+        
+        except:
+            stacktrace = traceback.format_exc()
+            logging.error("%s", stacktrace) 
+        
+        
+        
 
-        self.response.out.write("</ul>")
 
 
 
 
 
 class MyContact(db.Model):
+    owner = db.UserProperty(indexed=True)
     firstname = db.StringProperty()
-    owner = db.UserProperty()
-    id = db.StringProperty()
+    id = db.StringProperty(indexed=True)
 
-    def __init__(self, owner, idContact, firstname):
-        db.Model.__init__(self)
-        self.owner = owner
-        self.firstname = firstname
-        self.id = idContact
+    #def __init__(self, owner, idContact, firstname):
+    #    db.Model.__init__(self)
+    #    self.owner = owner
+    #    self.firstname = firstname
+    #    self.id = idContact
 
-        return None
+    #    return None
 
     def __hash__(self):
         return base64.encodestring(self.owner.__str__() + self.id)
